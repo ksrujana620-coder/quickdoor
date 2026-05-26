@@ -1,21 +1,20 @@
 {
-  "name": "village-quick-delivery-backend",
+  "name": "quick-door",
   "version": "1.0.0",
-  "description": "Backend for Village Quick Delivery",
-  "main": "server.js",
+  "description": "Quick door Delivery Services - Netlify Serverless",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "npm start --prefix backend",
+    "netlify": "netlify dev",
+    "install-all": "npm install && npm install --prefix backend"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "firebase": "^12.13.0",
-    "sqlite3": "^6.0.1",
-    "twilio": "^6.0.2"
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "firebase": "^10.7.0",
+    "serverless-http": "^3.2.0",
+    "twilio": "^4.19.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^26.0.2"
   }
 }
