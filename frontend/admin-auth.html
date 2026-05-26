@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Registration - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      margin: 40px auto;
+    }
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 15px;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--gray);
+      transition: all 0.3s;
+    }
+    .auth-tab.active {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1 style="display: flex; align-items: center; gap: 10px;">
+        <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+        <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door</a>
+      </h1>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchTab('login', this)">Partner Login</div>
+        <div class="auth-tab" onclick="switchTab('register', this)">New Registration</div>
+      </div>
+
+      <div id="loginForm">
+        <div class="form-group">
+          <label><i class="fas fa-phone"></i> Phone Number</label>
+          <input type="tel" id="loginPhone" placeholder="Enter phone number">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-lock"></i> Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter password">
+        </div>
+        <button class="btn btn-block" onclick="authenticate('login')">Login as Partner</button>
+      </div>
+
+      <div id="registerForm" style="display: none;">
+        <div class="form-group">
+          <label><i class="fas fa-store"></i> Shop Name</label>
+          <input type="text" id="regName" placeholder="e.g. Village General Store">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-user"></i> Owner Name</label>
+          <input type="text" id="regOwner" placeholder="Your full name">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-envelope"></i> Email Address</label>
+          <input type="email" id="regEmail" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-phone"></i> Phone Number</label>
+          <input type="tel" id="regPhone" placeholder="10-digit number">
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-lock"></i> Set Password</label>
+          <input type="password" id="regPassword" placeholder="Minimum 6 characters">
+        </div>
+        <button class="btn btn-block" onclick="authenticate('register')">Register Shop</button>
+      </div>
+
+      <p style="text-align: center; margin-top: 20px; color: var(--gray); font-size: 14px;">
+        <i class="fas fa-info-circle"></i> For administrative access, please contact the system administrator.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : window.location.origin + '/api';
+
+    function switchTab(type, el) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('loginForm').style.display = type === 'login' ? 'block' : 'none';
+      document.getElementById('registerForm').style.display = type === 'register' ? 'block' : 'none';
+    }
+
+    async function authenticate(type) {
+      let url, body;
+      
+      if (type === 'login') {
+        const phone = document.getElementById('loginPhone').value;
+        const password = document.getElementById('loginPassword').value;
+        if (!phone || !password) { alert('Please fill all fields'); return; }
+        url = `${API_BASE_URL}/shops/login`;
+        body = { phone, password };
+      } else {
+        const name = document.getElementById('regName').value;
+        const owner = document.getElementById('regOwner').value;
+        const email = document.getElementById('regEmail').value;
+        const phone = document.getElementById('regPhone').value;
+        const password = document.getElementById('regPassword').value;
+        if (!name || !owner || !email || !phone || !password) { alert('Please fill all fields'); return; }
+        url = `${API_BASE_URL}/shops/register`;
+        body = { name, owner, email, phone, password };
+      }
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+          const shop = await res.json();
+          localStorage.setItem('currentShopId', shop.id);
+          localStorage.setItem('currentShopName', shop.name);
+          alert(type === 'login' ? `Welcome back, ${shop.name}!` : `Shop ${shop.name} registered successfully!`);
+          window.location.href = 'shop-owner.html';
+        } else {
+          const err = await res.json();
+          let errorMsg = err.error || 'Authentication failed';
+          if (err.debug) {
+            errorMsg += '\n\nSERVER RECEIVED: ' + JSON.stringify(err.debug);
+          }
+          alert('Error: ' + errorMsg);
+        }
+      } catch (err) {
+        alert('Could not connect to server. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .payment-option {
+      background: var(--white);
+      border-radius: 15px;
+      padding: 25px 30px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+      margin-bottom: 15px;
+    }
+    .payment-option:hover {
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+    .payment-option.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .payment-option.disabled:hover {
+      border-color: transparent;
+      transform: none;
+    }
+    .payment-option h3 {
+      margin: 0 0 5px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .payment-option p {
+      color: var(--gray);
+      margin: 0;
+      font-size: 14px;
+    }
+    .success-card {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      max-width: 500px;
+      margin: 50px auto;
+      display: none;
+    }
+    .otp-badge {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary-color);
+      letter-spacing: 8px;
+      padding: 15px 25px;
+      background: #f0fdf4;
+      border: 2px dashed var(--primary-color);
+      border-radius: 10px;
+      display: inline-block;
+      margin: 20px 0;
+    }
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.8);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 15px;
+      font-size: 18px;
+      color: var(--secondary-color);
+    }
+    .loading-overlay.active {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('user')) {
+      window.location.href = 'login.html';
+    }
+  </script>
+  <header>
+    <div class="container">
+      <h1 style="display: flex; align-items: center; gap: 10px;">
+        <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+        <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door</a>
+      </h1>
+    </div>
+  </header>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: var(--primary-color);"></i>
+    <span>Placing your order...</span>
+  </div>
+
+  <div class="container" id="paymentSection" style="max-width: 600px; margin: 40px auto;">
+    <h2 style="margin-bottom: 25px;">Confirm Delivery Details</h2>
+    
+    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--shadow); margin-bottom: 30px;">
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label style="font-weight: 600; color: var(--secondary-color);"><i class="fas fa-user"></i> Full Name</label>
+        <input type="text" id="orderCustName" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px;" placeholder="Your Name">
+      </div>
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label style="font-weight: 600; color: var(--secondary-color);"><i class="fas fa-phone"></i> Phone Number</label>
+        <input type="tel" id="orderCustPhone" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px;" placeholder="10-digit phone number">
+      </div>
+      <div class="form-group">
+        <label style="font-weight: 600; color: var(--secondary-color);"><i class="fas fa-map-marker-alt"></i> Delivery Address</label>
+        <textarea id="orderCustAddress" rows="3" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; font-family: inherit;" placeholder="House no, Street, Village..."></textarea>
+      </div>
+    </div>
+
+    <h2 style="margin-bottom: 25px;">Select Payment Method</h2>
+    <div class="payment-option" onclick="placeOrder('COD')">
+      <h3><i class="fas fa-money-bill-wave" style="color: var(--primary-color);"></i> Cash On Delivery (COD)</h3>
+      <p>Pay when the delivery boy arrives at your doorstep</p>
+    </div>
+    <div class="payment-option disabled">
+      <h3><i class="fas fa-mobile-alt" style="color: var(--gray);"></i> Online Payment (UPI / Card)</h3>
+      <p>Coming soon...</p>
+    </div>
+    <div style="margin-top: 15px;">
+      <a href="product.html" style="color: var(--gray); font-size: 14px; text-decoration: none;">
+        <i class="fas fa-arrow-left"></i> Go back
+      </a>
+    </div>
+  </div>
+
+  <div class="success-card" id="successSection">
+    <div style="font-size: 60px; color: var(--primary-color); margin-bottom: 20px;">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <h2>Order Placed Successfully!</h2>
+    <p>Show this OTP to the delivery person to confirm your delivery:</p>
+    <div class="otp-badge" id="displayOtp">----</div>
+    <p style="color: var(--gray); font-size: 14px;">Your order will reach you shortly.</p>
+    <p style="color: var(--gray); font-size: 13px; background: #fff3cd; padding: 10px; border-radius: 8px;">
+      <i class="fas fa-exclamation-triangle" style="color: #856404;"></i>
+      Keep this OTP safe. Only share it with the delivery person.
+    </p>
+    <button class="btn btn-block" style="margin-top: 20px;" onclick="window.location.href='home.html'">
+      <i class="fas fa-home"></i> Back to Home
+    </button>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : '/api';
+
+    // Guard: if no product selected, go back to home
+    if (!localStorage.getItem('selectedProductId')) {
+      window.location.href = 'home.html';
+    }
+
+    // Prefill user details
+    document.addEventListener('DOMContentLoaded', () => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        document.getElementById('orderCustName').value = user.name || '';
+        document.getElementById('orderCustPhone').value = user.phone || '';
+        document.getElementById('orderCustAddress').value = user.address || '';
+      }
+    });
+
+    async function placeOrder(method) {
+      const productId = localStorage.getItem('selectedProductId');
+      const quantity = localStorage.getItem('selectedQuantity') || 1;
+
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const customerId = user ? user.id : 'guest';
+
+      const customerName = document.getElementById('orderCustName').value.trim();
+      const customerPhone = document.getElementById('orderCustPhone').value.trim();
+      const customerAddress = document.getElementById('orderCustAddress').value.trim();
+
+      if (!customerName || !customerPhone || !customerAddress) {
+        alert('Please fill in all delivery details before placing the order.');
+        return;
+      }
+
+      if (customerPhone.length !== 10) {
+        alert('Please enter a valid 10-digit phone number.');
+        return;
+      }
+
+      // Show loading
+      document.getElementById('loadingOverlay').classList.add('active');
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            productId, 
+            quantity: parseInt(quantity), 
+            customerId, 
+            customerName,
+            customerPhone,
+            customerAddress,
+            paymentMethod: method 
+          })
+        });
+
+        const order = await res.json();
+        document.getElementById('loadingOverlay').classList.remove('active');
+
+        if (res.ok) {
+          // Save order ID for order confirmation page
+          localStorage.setItem('lastOrderId', order.id);
+          document.getElementById('paymentSection').style.display = 'none';
+          document.getElementById('successSection').style.display = 'block';
+          document.getElementById('displayOtp').textContent = order.otp || '----';
+          // Clear selected product
+          localStorage.removeItem('selectedProductId');
+          localStorage.removeItem('selectedQuantity');
+        } else {
+          alert(order.error || 'Failed to place order. Please try again.');
+        }
+      } catch (err) {
+        document.getElementById('loadingOverlay').classList.remove('active');
+        console.error('Order error:', err);
+        alert('Network error. Please check your connection and try again.');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .profile-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 15px;
+    }
+    .profile-info {
+      text-align: left;
+      margin-top: 25px;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f8f9fa;
+    }
+    .info-label {
+      color: var(--gray);
+      font-weight: 500;
+    }
+    .info-value {
+      font-weight: 700;
+      color: var(--secondary-color);
+    }
+    .profile-stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 15px;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-value {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary-color);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--gray);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .order-history {
+      margin-top: 30px;
+      text-align: left;
+    }
+    .order-item {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .order-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-delivered { background: #d4edda; color: #155724; }
+    .not-logged-in {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .not-logged-in i {
+      font-size: 60px;
+      color: var(--gray);
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('user')) {
+      window.location.href = 'login.html';
+    }
+  </script>
+  <header>
+    <div class="container">
+      <h1 style="display: flex; align-items: center; gap: 10px;">
+        <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+        <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door</a>
+      </h1>
+      <nav>
+        <ul>
+          <li><a href="home.html">Home</a></li>
+          <li><a href="#" class="active">Profile</a></li>
+          <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="profileContent">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : '/api';
+
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return 'N/A';
+      try {
+        return new Date(dateStr).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch (e) { return dateStr; }
+    }
+
+    async function loadProfile() {
+      const profileContent = document.getElementById('profileContent');
+      const userStr = localStorage.getItem('user');
+
+      if (!userStr) {
+        profileContent.innerHTML = `
+          <div class="not-logged-in">
+            <i class="fas fa-user-lock"></i>
+            <h2>You're not logged in</h2>
+            <p style="color: var(--gray);">Please log in to view your profile and order history.</p>
+            <div style="display:flex; gap:15px; justify-content:center; margin-top:20px;">
+              <a href="login.html" class="btn">Login</a>
+              <a href="signup.html" class="btn" style="background: var(--secondary-color);">Signup</a>
+            </div>
+          </div>`;
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+      const memberSince = formatDate(user.createdAt);
+
+      profileContent.innerHTML = `
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <h2 id="userName" style="margin-bottom: 5px;">${user.name || 'User'}</h2>
+          <p style="color: var(--gray); margin-bottom: 20px;">+91 ${user.phone || 'N/A'}</p>
+
+          <div class="profile-stats">
+            <div class="stat-item">
+              <span class="stat-value" id="totalOrdersCount">0</span>
+              <span class="stat-label">Orders</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" style="color: #3498db;">${user.role === 'admin' ? 'Admin' : (user.role === 'shop' ? 'Partner' : 'Member')}</span>
+              <span class="stat-label">Level</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" style="color: ${user.isVerified ? '#27ae60' : '#e67e22'}">
+                ${user.isVerified ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>'}
+              </span>
+              <span class="stat-label">Status</span>
+            </div>
+          </div>
+
+          <div class="profile-info">
+            <h3 style="margin-bottom: 15px; font-size: 16px; border-bottom: 2px solid #f8f9fa; padding-bottom: 8px;">Personal Information</h3>
+            <div class="info-item">
+              <span class="info-label">Full Name</span>
+              <span class="info-value">${user.name || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Phone Number</span>
+              <span class="info-value">+91 ${user.phone || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Account Type</span>
+              <span class="info-value" style="text-transform: capitalize;">${user.role || 'Customer'}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Member Since</span>
+              <span class="info-value">${memberSince}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Verification</span>
+              <span class="info-value" style="color: ${user.isVerified ? 'var(--primary-color)' : '#e67e22'};">
+                ${user.isVerified ? 'Verified Account' : 'Pending Verification'}
+              </span>
+            </div>
+          </div>
+
+          <div class="order-history">
+            <h3 style="margin-bottom: 15px; font-size: 16px; border-bottom: 2px solid #f8f9fa; padding-bottom: 8px;">Recent Orders</h3>
+            <div id="orderList" style="margin-top: 15px;">
+              <p style="text-align: center; color: var(--gray); padding: 10px;">Loading orders...</p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px;">
+            <button class="btn" onclick="window.location.href='home.html'">
+              <i class="fas fa-shopping-bag"></i> Shop
+            </button>
+            <button class="btn" style="background: var(--secondary-color);" onclick="window.location.href='home.html'">
+              <i class="fas fa-home"></i> Home
+            </button>
+          </div>
+          <button class="btn btn-block" style="margin-top: 10px; background: #e74c3c;" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>`;
+
+      // Load orders with product images
+      if (user.id) {
+        try {
+          // Fetch orders and products in parallel
+          const [ordersRes, productsRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/orders?customerId=${user.id}`),
+            fetch(`${API_BASE_URL}/products`)
+          ]);
+
+          const orders   = ordersRes.ok   ? await ordersRes.json()   : [];
+          const products = productsRes.ok ? await productsRes.json() : [];
+
+          // Build product lookup map
+          const productMap = {};
+          products.forEach(p => { productMap[p.id] = p; });
+
+          const orderList       = document.getElementById('orderList');
+          const totalOrdersCount = document.getElementById('totalOrdersCount');
+
+          if (!orders || orders.length === 0) {
+            orderList.innerHTML = '<p style="text-align:center; color:var(--gray); padding:20px;">No orders yet. Start shopping!</p>';
+            totalOrdersCount.textContent = '0';
+          } else {
+            totalOrdersCount.textContent = orders.length;
+
+            // Sort newest first
+            orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            orderList.innerHTML = orders.slice(0, 5).map(o => {
+              const product     = productMap[o.productId];
+              const productName = product ? product.name  : 'Unknown Product';
+              const productImg  = product ? (product.image || '') : '';
+              const price       = product ? `₹${product.price * o.quantity}` : '';
+
+              return `
+                <div class="order-item">
+                  <img
+                    src="${productImg}"
+                    onerror="this.src='https://placehold.co/60x60/e8f5e9/27ae60?text=📦'"
+                    class="order-product-img"
+                    alt="${productName}">
+                  <div class="order-item-info">
+                    <div class="order-product-name">${productName}</div>
+                    <div style="font-size:12px; color:var(--gray); margin-top:3px;">
+                      Order #${o.id.slice(-6).toUpperCase()}
+                    </div>
+                    <div style="font-size:12px; color:var(--gray); margin-top:2px;">
+                      ${formatDate(o.createdAt)} &bull; Qty: ${o.quantity}
+                      ${price ? ` &bull; <strong style="color:#27ae60;">${price}</strong>` : ''}
+                    </div>
+                  </div>
+                  <span class="order-status status-${o.status}">${o.status}</span>
+                </div>`;
+            }).join('');
+          }
+        } catch (err) {
+          document.getElementById('orderList').innerHTML =
+            '<p style="text-align:center; color:var(--gray);">Could not load orders.</p>';
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>

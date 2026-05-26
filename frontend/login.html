@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1 style="display: flex; align-items: center; gap: 10px;">
+        <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+        <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door</a>
+      </h1>
+    </div>
+  </header>
+  
+  <div class="form-container">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="phone" required placeholder="Enter 10-digit phone number">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="submit" class="btn btn-block">Login</button>
+    </form>
+    <p style="text-align:center; margin-top:15px;">
+      Don't have an account? <a href="signup.html">Signup</a>
+    </p>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : '/api';
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const phone = document.getElementById('phone').value;
+      const password = document.getElementById('password').value;
+
+      fetch(`${API_BASE_URL}/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ phone, password })
+      })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (status === 200) {
+          alert('Logged in successfully!');
+          localStorage.setItem('user', JSON.stringify(data.user));
+          window.location.href = 'home.html';
+        } else {
+          alert(data.error || 'Login failed');
+        }
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        alert(`Failed to connect to backend server. Make sure it is running on ${API_BASE_URL}`);
+      });
+    });
+  </script>
+
+</body>
+</html>

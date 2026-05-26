@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('user')) {
+      window.location.href = 'login.html';
+    }
+  </script>
+  <header>
+    <div class="container">
+      <h1 style="display: flex; align-items: center; gap: 10px;">
+        <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+        <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door</a>
+      </h1>
+    </div>
+  </header>
+
+  <div class="container">
+    <div style="margin-top: 20px;">
+      <a href="home.html" style="color: var(--gray); text-decoration: none; font-size: 14px;">
+        <i class="fas fa-arrow-left"></i> Back to Products
+      </a>
+    </div>
+    <div class="product-details-wrapper" id="productDetails">
+      <div style="text-align:center; padding: 60px; grid-column: 1/-1;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: var(--primary-color);"></i>
+        <p style="margin-top: 15px; color: var(--gray);">Loading product...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : '/api';
+
+    let currentProductStock = 0;
+
+    async function loadProductDetails() {
+      const productId = localStorage.getItem('selectedProductId');
+      if (!productId) {
+        window.location.href = 'home.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/products/${productId}`);
+        if (!res.ok) throw new Error('Product not found');
+        const product = await res.json();
+        currentProductStock = product.stock || 0;
+
+        // Try to get shop name
+        let shopName = 'Local Shop';
+        if (product.shopId) {
+          try {
+            const shopRes = await fetch(`${API_BASE_URL}/shops`);
+            if (shopRes.ok) {
+              const shops = await shopRes.json();
+              const shop = shops.find(s => s.id === product.shopId);
+              if (shop) shopName = shop.name;
+            }
+          } catch (e) { /* ignore, use default */ }
+        }
+
+        const displayCategory = Array.isArray(product.category)
+          ? product.category.join(', ')
+          : (product.category || 'General');
+
+        document.getElementById('productDetails').innerHTML = `
+          <div>
+            <img src="${product.image || 'https://placehold.co/400x300/e8f5e9/27ae60?text=Product'}"
+                 alt="${product.name}"
+                 onerror="this.src='https://placehold.co/400x300/e8f5e9/27ae60?text=Product'"
+                 style="width:100%; border-radius:12px; object-fit:contain; max-height:350px;">
+          </div>
+          <div>
+            <span style="display:inline-block; background:#e8f5e9; color:var(--primary-color); padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; margin-bottom:12px; text-transform:uppercase;">${displayCategory}</span>
+            <h2 style="margin: 0 0 8px 0; color: var(--secondary-color); font-size: 28px;">${product.name}</h2>
+            <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 20px;">
+              <i class="fas fa-store"></i> ${shopName}
+            </p>
+            <div style="font-size: 36px; font-weight: 800; color: var(--primary-color); margin-bottom: 10px;">₹${product.price}</div>
+            <p style="color: ${currentProductStock > 0 ? '#27ae60' : '#e74c3c'}; font-size: 14px; font-weight: 600;">
+              <i class="fas fa-${currentProductStock > 0 ? 'check-circle' : 'times-circle'}"></i>
+              ${currentProductStock > 0 ? `In Stock (${currentProductStock} available)` : 'Out of Stock'}
+            </p>
+
+            <div class="form-group" style="max-width: 160px; margin-top: 25px;">
+              <label style="font-weight: 600;">Quantity</label>
+              <input type="number" id="quantity" value="1" min="1" max="${currentProductStock}"
+                style="margin-top: 8px; font-size: 18px; font-weight: 700; text-align: center;">
+            </div>
+
+            <button class="btn" onclick="goToPayment()" style="margin-top: 25px; font-size: 18px; padding: 15px 40px; border-radius: 50px;"
+              ${currentProductStock === 0 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+              <i class="fas fa-shopping-cart"></i> Order Now
+            </button>
+          </div>`;
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        document.getElementById('productDetails').innerHTML = `
+          <div style="text-align:center; padding:60px;">
+            <i class="fas fa-exclamation-triangle" style="font-size:48px; color:#e74c3c;"></i>
+            <h3 style="margin-top:20px;">Product Not Found</h3>
+            <a href="home.html" class="btn" style="margin-top:15px;">Back to Home</a>
+          </div>`;
+      }
+    }
+
+    function goToPayment() {
+      const qty = parseInt(document.getElementById('quantity').value);
+      if (!qty || qty < 1) {
+        alert('Please select a valid quantity');
+        return;
+      }
+      if (qty > currentProductStock) {
+        alert(`Sorry, only ${currentProductStock} items are available in stock.`);
+        return;
+      }
+      localStorage.setItem('selectedQuantity', qty);
+      window.location.href = 'payment.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProductDetails);
+  </script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Admin Lock Overlay */
+    #adminLockOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-color);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lock-card {
+      background: var(--white);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    .lock-card i {
+      font-size: 50px;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+    .lock-card h2 { margin-bottom: 10px; }
+    .lock-card p { color: var(--gray); margin-bottom: 25px; }
+    .lock-card input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: var(--white);
+      padding: 25px;
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .stat-card .icon {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--secondary-color);
+    }
+    .stat-card h3 {
+      font-size: 14px;
+      color: var(--gray);
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .dashboard-table {
+      width: 100%;
+      background: var(--white);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border-collapse: collapse;
+    }
+    .dashboard-table th, .dashboard-table td {
+      padding: 15px 20px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .dashboard-table th {
+      background: #f8f9fa;
+      color: var(--gray);
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .status-pill {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .status-active { background: #e8f5e9; color: #27ae60; }
+    .status-paused { background: #fff3e0; color: #f39c12; }
+
+    /* Hide everything except overlay by default */
+    #adminDashboardContent {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Immediate access check to prevent flash -->
+  <script>
+    if (sessionStorage.getItem('adminAccess') === 'true') {
+      document.write('<style>#adminDashboardContent { display: block !important; } #adminLockOverlay { display: none !important; }</style>');
+    }
+  </script>
+
+  <!-- Admin Access Lock -->
+  <div id="adminLockOverlay">
+    <div class="lock-card">
+      <i class="fas fa-user-shield"></i>
+      <h2>Admin Access</h2>
+      <p>Please enter the administrator password to continue.</p>
+      <input type="password" id="adminPassword" placeholder="Enter Password" autofocus>
+      <button class="btn btn-block" onclick="checkAdminPassword()">Login as Admin</button>
+      <p id="lockError" style="color: #e74c3c; margin-top: 15px; display: none; font-size: 14px; font-weight: 600;">Incorrect password. Access denied.</p>
+      <a href="home.html" style="display: block; margin-top: 20px; color: var(--gray); text-decoration: none; font-size: 14px;">Back to Home</a>
+    </div>
+  </div>
+
+  <div id="adminDashboardContent">
+    <header>
+      <div class="container">
+        <h1 style="display: flex; align-items: center; gap: 10px;">
+          <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+          <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door - Admin</a>
+        </h1>
+        <nav>
+          <ul>
+            <li><a href="home.html">View Site</a></li>
+            <li><a href="#" onclick="logoutAdmin()">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container" style="margin-top: 40px;">
+      <h2>Platform Overview</h2>
+      
+      <div class="admin-stats">
+        <div class="stat-card">
+          <div class="icon" style="color: var(--secondary-color);"><i class="fas fa-store"></i></div>
+          <h3>Total Shop Owners</h3>
+          <div class="value" id="totalShops">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon" style="color: #27ae60;"><i class="fas fa-check-circle"></i></div>
+          <h3>Active Shops</h3>
+          <div class="value" id="activeShops" style="color: #27ae60;">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon" style="color: #f39c12;"><i class="fas fa-pause-circle"></i></div>
+          <h3>Paused Shops</h3>
+          <div class="value" id="pausedShops" style="color: #f39c12;">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon" style="color: #3498db;"><i class="fas fa-truck"></i></div>
+          <h3>Total Deliveries</h3>
+          <div class="value" id="totalDeliveries" style="color: #3498db;">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon" style="color: #9b59b6;"><i class="fas fa-shopping-cart"></i></div>
+          <h3>Total Orders</h3>
+          <div class="value" id="totalOrders" style="color: #9b59b6;">0</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Shop Owner Management</h2>
+        <button class="btn" onclick="seedMockShops()">+ Seed Sample Data</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="dashboard-table">
+          <thead>
+            <tr>
+              <th>Shop Name</th>
+              <th>Owner</th>
+              <th>Products</th>
+              <th>Deliveries</th>
+              <th>Status</th>
+              <th>Join Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="shopsTableBody">
+            <tr><td colspan="7" style="text-align:center;">Loading shop owners...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : window.location.origin + '/api';
+
+    // Admin Access Control
+    function checkAdminPassword() {
+      const pass = document.getElementById('adminPassword').value;
+      const errorMsg = document.getElementById('lockError');
+      
+      if (pass === 'changeme@123') {
+        sessionStorage.setItem('adminAccess', 'true');
+        document.getElementById('adminLockOverlay').style.display = 'none';
+        document.getElementById('adminDashboardContent').style.display = 'block';
+        loadShops();
+      } else {
+        errorMsg.style.display = 'block';
+        setTimeout(() => { errorMsg.style.display = 'none'; }, 3000);
+      }
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem('adminAccess');
+      window.location.reload();
+    }
+
+    // Check on load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('adminAccess') === 'true') {
+        const overlay = document.getElementById('adminLockOverlay');
+        const content = document.getElementById('adminDashboardContent');
+        if (overlay) overlay.style.display = 'none';
+        if (content) content.style.display = 'block';
+        loadShops();
+      }
+      
+      // Allow 'Enter' key to submit password
+      const adminPassInput = document.getElementById('adminPassword');
+      if (adminPassInput) {
+        adminPassInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') checkAdminPassword();
+        });
+      }
+    });
+
+    let deliveryStats = {}; // Will hold per-shop delivery data
+
+    async function loadDeliveryStats() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/orders/stats`);
+        if (res.ok) {
+          deliveryStats = await res.json();
+        }
+      } catch (err) {
+        console.error('Failed to load delivery stats:', err);
+      }
+    }
+
+    async function loadShops() {
+      try {
+        // Load delivery stats first
+        await loadDeliveryStats();
+
+        const res = await fetch(`${API_BASE_URL}/shops`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        
+        const shops = await res.json();
+        console.log('Shops loaded:', shops);
+        const tbody = document.getElementById('shopsTableBody');
+        tbody.innerHTML = '';
+
+        let activeCount = 0;
+        let pausedCount = 0;
+        let grandTotalDeliveries = 0;
+        let grandTotalOrders = 0;
+
+        if(!shops || shops.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No shop owners registered yet. Click "Seed Sample Data" to start.</td></tr>';
+          document.getElementById('totalShops').textContent = '0';
+          document.getElementById('activeShops').textContent = '0';
+          document.getElementById('pausedShops').textContent = '0';
+          document.getElementById('totalDeliveries').textContent = '0';
+          document.getElementById('totalOrders').textContent = '0';
+          return;
+        }
+
+        // Load product counts for each shop
+        let productRes;
+        let allProducts = [];
+        try {
+          productRes = await fetch(`${API_BASE_URL}/products`);
+          allProducts = await productRes.json();
+        } catch(e) { /* ignore */ }
+
+        shops.forEach(shop => {
+          if(shop.status === 'active') activeCount++;
+          else pausedCount++;
+
+          const shopStats = deliveryStats[shop.id] || { totalOrders: 0, deliveredOrders: 0, pendingOrders: 0 };
+          
+          // Accumulate grand totals ONLY for existing shops
+          grandTotalOrders += shopStats.totalOrders || 0;
+          grandTotalDeliveries += shopStats.deliveredOrders || 0;
+
+          const productCount = allProducts.filter(p => p.shopId === shop.id).length;
+
+          let deliveryHTML = '';
+          if (shopStats.totalOrders === 0) {
+            deliveryHTML = '<span class="delivery-badge delivery-zero"><i class="fas fa-minus-circle"></i> No orders</span>';
+          } else {
+            deliveryHTML = `
+              <span class="delivery-badge delivery-delivered"><i class="fas fa-truck"></i> ${shopStats.deliveredOrders} delivered</span>
+              <br style="margin-bottom:4px;">
+              <span class="delivery-badge delivery-pending" style="margin-top:4px;"><i class="fas fa-clock"></i> ${shopStats.pendingOrders} pending</span>
+            `;
+          }
+
+          tbody.innerHTML += `
+            <tr>
+              <td>
+                <div style="font-weight: 700;">${shop.name}</div>
+                <div style="font-size: 12px; color: var(--gray);">${shop.email}</div>
+              </td>
+              <td>${shop.owner}</td>
+              <td>${productCount}</td>
+              <td>${deliveryHTML}</td>
+              <td>
+                <span class="status-badge status-${shop.status}">${shop.status}</span>
+              </td>
+              <td>${shop.createdAt ? new Date(shop.createdAt).toLocaleDateString() : 'N/A'}</td>
+              <td class="action-btns">
+                ${shop.status === 'active' 
+                  ? `<button class="btn btn-sm btn-pause" onclick="updateStatus('${shop.id}', 'paused')"><i class="fas fa-pause"></i> Pause</button>`
+                  : `<button class="btn btn-sm btn-resume" onclick="updateStatus('${shop.id}', 'active')"><i class="fas fa-play"></i> Resume</button>`
+                }
+                <button class="btn btn-sm btn-remove" onclick="removeShop('${shop.id}')"><i class="fas fa-trash"></i> Remove</button>
+              </td>
+            </tr>
+          `;
+        });
+
+        document.getElementById('totalShops').textContent = shops.length;
+        document.getElementById('activeShops').textContent = activeCount;
+        document.getElementById('pausedShops').textContent = pausedCount;
+        document.getElementById('totalDeliveries').textContent = grandTotalDeliveries;
+        document.getElementById('totalOrders').textContent = grandTotalOrders;
+      } catch (err) {
+        console.error('Shop Loading Error:', err);
+        document.getElementById('shopsTableBody').innerHTML = `<tr><td colspan="7" style="text-align:center; color: red;">Error: ${err.message}. Ensure backend is running.</td></tr>`;
+      }
+    }
+
+    async function updateStatus(id, status) {
+      if(!confirm(`Are you sure you want to ${status} this shop?`)) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/shops/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        if(res.ok) loadShops();
+      } catch (err) {
+        alert('Failed to update status');
+      }
+    }
+
+    async function removeShop(id) {
+      if(!confirm('DANGER: This will permanently remove the shop and all its products. Continue?')) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/shops/${id}`, {
+          method: 'DELETE'
+        });
+        if(res.ok) loadShops();
+      } catch (err) {
+        alert('Failed to remove shop');
+      }
+    }
+
+    // Temporary helper to add sample data since we don't have a registration flow for shops yet
+    async function seedMockShops() {
+      const mockShops = [
+        { name: 'Village Green Grocery', owner: 'Ramesh Kumar', email: 'ramesh@village.com', phone: '9876543210' },
+        { name: 'Sweet Treats', owner: 'Priya Sharma', email: 'priya@sweets.com', phone: '9876543211' }
+      ];
+
+      for(const shop of mockShops) {
+        await fetch(`${API_BASE_URL}/shops/seed`, { // I'll add this endpoint briefly
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(shop)
+        });
+      }
+      loadShops();
+    }
+
+
+  </script>
+</body>
+</html>

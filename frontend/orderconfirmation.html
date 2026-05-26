@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmation - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('user')) {
+      window.location.href = 'login.html';
+    }
+  </script>
+  <header>
+    <div class="container">
+      <h1 style="display: flex; align-items: center; gap: 10px;">
+        <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+        <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door</a>
+      </h1>
+    </div>
+  </header>
+  
+  <div class="form-container" style="text-align: center; max-width: 500px;">
+    <div style="font-size: 50px; color: #2ecc71; margin-bottom: 20px;">✓</div>
+    <h2>Order Placed Successfully!</h2>
+    <p>Your order has been confirmed and is being prepared by the local shop.</p>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left;">
+      <p><strong>Order ID:</strong> #<span id="orderId">Loading...</span></p>
+      <p><strong>Status:</strong> <span style="color: #f39c12; font-weight:bold;">Pending</span></p>
+      <p><strong>Payment Method:</strong> Cash on Delivery</p>
+    </div>
+    
+    <a href="home.html" class="btn btn-block">Back to Home</a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const orderId = localStorage.getItem('lastOrderId') || Math.floor(Math.random() * 10000);
+      document.getElementById('orderId').textContent = orderId;
+    });
+  </script>
+</body>
+</html>

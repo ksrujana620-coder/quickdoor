@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Boy Login - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e8f5e9 0%, #f0fdf4 100%);
+      display: flex;
+      flex-direction: column;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 8px 40px rgba(39,174,96,0.13);
+      padding: 44px 40px 36px;
+      max-width: 420px;
+      width: 92%;
+      margin: auto;
+    }
+    .login-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      color: white;
+      margin: 0 auto 22px;
+      box-shadow: 0 6px 20px rgba(39,174,96,0.35);
+    }
+    .login-card h2 {
+      text-align: center;
+      color: #2c3e50;
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0 0 6px;
+    }
+    .login-card .subtitle {
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+    .field-group {
+      margin-bottom: 18px;
+    }
+    .field-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 7px;
+    }
+    .field-group input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: inherit;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+      color: #2c3e50;
+    }
+    .field-group input:focus {
+      outline: none;
+      border-color: #27ae60;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+      box-shadow: 0 4px 16px rgba(39,174,96,0.35);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(39,174,96,0.4);
+    }
+    .login-btn:disabled {
+      opacity: 0.7;
+      transform: none;
+      cursor: not-allowed;
+    }
+    .error-msg {
+      background: #fff0f0;
+      color: #e74c3c;
+      border: 1px solid #fcc;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 16px;
+      display: none;
+      text-align: center;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 22px;
+      color: #7f8c8d;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .back-link:hover { color: #27ae60; }
+    .info-banner {
+      background: #e8f5e9;
+      border-left: 4px solid #27ae60;
+      border-radius: 8px;
+      padding: 11px 15px;
+      font-size: 13px;
+      color: #2e7d32;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1 style="display:flex; align-items:center; gap:10px;">
+        <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+        <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door</a>
+      </h1>
+    </div>
+  </header>
+
+  <div style="display:flex; align-items:center; justify-content:center; flex:1; padding:30px 16px;">
+    <div class="login-card">
+      <div class="login-icon">
+        <i class="fas fa-motorcycle"></i>
+      </div>
+      <h2>Delivery Boy Login</h2>
+      <p class="subtitle">Enter the credentials set by your shop owner</p>
+
+      <div class="info-banner">
+        <i class="fas fa-info-circle" style="flex-shrink:0;"></i>
+        Your login details were created by your shop owner. Contact them if you don't have them.
+      </div>
+
+      <div class="field-group">
+        <label><i class="fas fa-phone" style="color:#27ae60;"></i> Phone Number</label>
+        <input type="tel" id="phone" placeholder="Enter your 10-digit phone number" maxlength="10" autofocus>
+      </div>
+      <div class="field-group">
+        <label><i class="fas fa-lock" style="color:#27ae60;"></i> Password</label>
+        <input type="password" id="password" placeholder="Enter your password">
+      </div>
+
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">
+        <i class="fas fa-sign-in-alt"></i> Login
+      </button>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <a href="login.html" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Customer Login
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : window.location.origin + '/api';
+
+    // If already logged in as delivery boy, skip straight to dashboard
+    const existing = localStorage.getItem('deliveryBoy');
+    if (existing) {
+      window.location.href = 'deliveryboy.html';
+    }
+
+    // Allow Enter key
+    document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    async function doLogin() {
+      const phone    = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorEl  = document.getElementById('errorMsg');
+      const btn      = document.getElementById('loginBtn');
+
+      errorEl.style.display = 'none';
+
+      if (!phone || phone.length !== 10) {
+        showError('Please enter a valid 10-digit phone number.');
+        return;
+      }
+      if (!password) {
+        showError('Please enter your password.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/delivery-boys/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, password })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          // Save delivery boy session separately from customer session
+          localStorage.setItem('deliveryBoy', JSON.stringify(data.deliveryBoy));
+          window.location.href = 'deliveryboy.html';
+        } else {
+          showError(data.error || 'Login failed. Please check your credentials.');
+        }
+      } catch (err) {
+        showError('Could not connect to server. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

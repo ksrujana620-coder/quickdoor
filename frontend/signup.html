@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signup - Quick door</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Success Popup Styles */
+    #successPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      z-index: 9999;
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    @keyframes loadProgress {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+    .success-icon {
+      font-size: 60px;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 9998;
+      backdrop-filter: blur(4px);
+    }
+    .loading-bar-inner {
+      height: 100%;
+      background: var(--primary-color);
+      width: 0%;
+      animation: loadProgress 2s linear forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="popupOverlay"></div>
+  <div id="successPopup">
+    <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+    <h2 style="margin-bottom: 10px; color: var(--secondary-color);">Signup Successful!</h2>
+    <p style="color: var(--gray); margin-bottom: 20px;">Welcome to Quick door. Redirecting to home page...</p>
+    <div class="loading-bar" style="height: 4px; background: #eee; border-radius: 2px; overflow: hidden; margin-top: 10px;">
+      <div class="loading-bar-inner"></div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container">
+      <h1 style="display: flex; align-items: center; gap: 10px;">
+        <img src="images/qvs.jpeg" alt="Quick door Logo" class="logo">
+        <a href="home.html" style="color:var(--primary-color); text-decoration:none;">Quick door</a>
+      </h1>
+    </div>
+  </header>
+  
+  <div class="form-container">
+    <h2>Create Account</h2>
+    <form id="signupForm">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="name" required placeholder="Enter your name">
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="phone" required placeholder="Enter 10-digit phone number" pattern="[0-9]{10}" maxlength="10" title="Please enter exactly 10 digits">
+      </div>
+      <div class="form-group">
+        <label>Delivery Address</label>
+        <textarea id="address" rows="2" placeholder="House no, Street, Village / Area..." style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-family:inherit; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="role">
+          <option value="customer">Customer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" required>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="confirmPassword" required>
+      </div>
+      <button type="submit" class="btn btn-block">Signup</button>
+    </form>
+    
+    <div id="otpSection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+      <h3>Verify OTP</h3>
+      <p style="font-size: 14px; color: var(--gray); margin-bottom: 15px;">Enter the 4-digit code sent to your phone.</p>
+      <div class="form-group">
+        <input type="text" id="otpCode" placeholder="1234" maxlength="4" style="text-align: center; font-size: 24px; letter-spacing: 10px; font-weight: 800;">
+      </div>
+      <button type="button" class="btn btn-block" onclick="verifyOtp()">Verify & Finish</button>
+    </div>
+
+    <p style="text-align:center; margin-top:15px;">
+      Already have an account? <a href="login.html">Login</a>
+    </p>
+  </div>
+
+  <script>
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : '/api';
+    let userData = {};
+
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const phone = document.getElementById('phone').value;
+      const address = document.getElementById('address').value.trim();
+      const role = document.getElementById('role').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      
+      if (phone.length !== 10) {
+        alert('Please enter a valid 10-digit phone number');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+
+      // Call signup API
+      fetch(`${API_BASE_URL}/users/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, phone, address, role, password })
+      })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (status === 201) {
+          userData = { phone };
+          // Hide signup form, show OTP section
+          document.querySelector('h2').textContent = 'Verification';
+          document.getElementById('signupForm').style.display = 'none';
+          document.getElementById('otpSection').style.display = 'block';
+          
+          let alertMsg = 'OTP has been generated!';
+          if (data.smsStatus === 'failed_fallback_to_console') {
+            alertMsg += `\n\n(Note: Free SMS quota exceeded or network unavailable. Please check the VS Code terminal/console for the OTP or enter: ${data.debugOtp})`;
+          } else {
+            alertMsg += '\n\nIt was sent to ' + phone + ' in real-time!';
+          }
+          alert(alertMsg);
+        } else {
+          alert(data.error || 'Signup failed');
+        }
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        alert(`Failed to connect to backend server. Make sure it is running on ${API_BASE_URL}`);
+      });
+    });
+
+    function verifyOtp() {
+      const code = document.getElementById('otpCode').value;
+      if (!code || code.length !== 4) {
+        alert('Please enter a valid 4-digit OTP');
+        return;
+      }
+
+      fetch(`${API_BASE_URL}/users/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ phone: userData.phone, otp: code })
+      })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(({ status, data }) => {
+        if (status === 200) {
+          // Show success popup instead of standard alert
+          document.getElementById('popupOverlay').style.display = 'block';
+          document.getElementById('successPopup').style.display = 'block';
+          
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          // Redirect after 2 seconds
+          setTimeout(() => {
+            window.location.href = 'home.html';
+          }, 2000);
+        } else {
+          alert(data.error || 'Invalid OTP. Please try again.');
+        }
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        alert('Verification request failed');
+      });
+    }
+  </script>
+
+</body>
+</html>
